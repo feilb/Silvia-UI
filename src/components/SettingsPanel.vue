@@ -24,6 +24,7 @@
           @mouseup.prevent="handleTouchEnd"
           :min="10"
           :max="180"
+          :step="5"
         />
       </div>
     </div>

@@ -1,17 +1,7 @@
 <template>
   <div class="p-grid p-d-flex" style="height:100%">
     <div class="p-col-3" id="left-nav">
-      <StatePanel
-        :power="mode != 'off'"
-        :brew="mode == 'brew'"
-        :water="mode == 'water'"
-        :steam="mode == 'steam'"
-
-        @power-clicked="handlePower"
-        @brew-clicked="handleBrew"
-        @water-clicked="handleWater"
-        @steam-clicked="handleSteam"
-      />
+      <StatePanel />
     </div>
     <div class="p-col-9"  id="main-content">
       <TabView>
@@ -25,7 +15,7 @@
           <template #header>
             <i class="pi pi-sliders-v icon"></i>
           </template>
-          <SetpointPanel />
+          <SetpointPanel :brewSetpoint="myBSP" @update:brewSetpoint="updateBSP($event)" />
         </TabPanel>
         <TabPanel>
           <template #header>
@@ -35,7 +25,14 @@
         </TabPanel>
         <TabPanel :disabled="true">
           <template #header>
-            <span class="info">{{temp.toFixed(1)}}°C | {{sp.toFixed(1)}}°C</span>
+            <i class="pi pi-chart-line icon-before"></i>
+            <span class="info">{{temp.toFixed(1)}}°C</span>
+          </template>
+        </TabPanel>
+        <TabPanel :disabled="true">
+          <template #header>
+            <i class="pi pi-sliders-v icon-before" v-if="mode !== 'off'"></i>
+            <span class="info" v-if="mode !== 'off'">{{`${sp.toFixed(1)}°C`}}</span>
           </template>
         </TabPanel>
       </TabView>
@@ -50,6 +47,10 @@
 .icon {
   font-size: 2rem;
 }
+.icon-before {
+  font-size: 1rem;
+  margin-right: 0.5rem
+}
 
 canvas {
   height: 400px
@@ -57,16 +58,46 @@ canvas {
 </style>
 
 <script>
-import axios from "axios"
+import { ref } from 'vue'
+
+import axios from 'axios'
+
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+import Chart from 'primevue/chart'
+
+import StatePanel from './components/StatePanel'
+import SetpointPanel from './components/SetpointPanel'
 
 export default {
   name: 'App',
   components: {
+    TabView,
+    TabPanel,
+    Chart,
+    StatePanel,
+    SetpointPanel,
+  },
+  setup() {
+    const myBSP = ref(100)
+
+    function updateBSP(val) {
+      console.log(val)
+      myBSP.value = val + 2
+      console.log(myBSP.value)
+    }
+
+    return {
+      myBSP,
+      updateBSP,
+    }
   },
   methods: {
-    thisTest() {
+    thisTest(val) {
       console.log('chart?')
-      console.log(this.$refs.chart)
+      console.log(val)
+      this.myBSP = val+2
+      console.log(this.myBSP)
     },
     handlePower() {
       if (this.mode == 'off') {
@@ -134,25 +165,27 @@ export default {
       steam:140,
       temp: 0,
       temperature: {
-        labels:(function() { 
+       labels:(function() { 
           let array = []
-          for (let i = 0; i < 60; i++) {
-            array.push('')
+          for (let i = 0; i < 180; i++) {
+            array.push(180 - i)
           }
           return array 
         })(),
         datasets: [
           {
-            label: 'Temperature',
+            label: 'Boiler Temp',
             data:(function() { 
               let array = []
-              for (let i = 0; i < 60; i++) {
+              for (let i = 0; i < 180; i++) {
                 array.push(0)
               }
               return array 
             })(),
-            fill: false,
+            fill: true,
+            pointRadius: 0,
             borderColor: 'rgba(109,117,125,1)',
+            backgroundColor: 'rgba(109,117,125,0.1)',
           }
         ]
       },
@@ -165,6 +198,16 @@ export default {
               suggestedMax: 150,
               callback: function (val) {
                 return val + '°C'
+              }
+            }
+          }],
+          xAxes: [{
+            ticks: {
+              maxRotation: 0,
+              autoSkipPadding: 50,
+              fontSize: 16,
+              callback: function (val) {
+                return `${val}s`
               }
             }
           }]

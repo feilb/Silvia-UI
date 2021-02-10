@@ -16,15 +16,6 @@
    width="4.6578436mm">
   <defs
      id="defs2846">
-    <filter
-       id="filter3445"
-       style="color-interpolation-filters:sRGB"
-       inkscape:collect="always">
-      <feGaussianBlur
-         id="feGaussianBlur3447"
-         stdDeviation="0.0001122532"
-         inkscape:collect="always" />
-    </filter>
   </defs>
   <sodipodi:namedview
      inkscape:window-maximized="0"
@@ -63,7 +54,6 @@
   </metadata>
   <g
      transform="translate(-67.994233,-88.321737)"
-     style="filter:url(#filter3445)"
      id="layer1"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1">

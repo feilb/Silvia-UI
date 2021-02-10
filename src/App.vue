@@ -21,7 +21,7 @@
           <template #header>
             <i class="pi pi-cog icon"></i>
           </template>
-          Settings
+          <SettingsPanel />
         </TabPanel>
         <TabPanel :disabled="true">
           <template #header>
@@ -68,6 +68,7 @@ import Chart from 'primevue/chart'
 
 import StatePanel from './components/StatePanel'
 import SetpointPanel from './components/SetpointPanel'
+import SettingsPanel from './components/SettingsPanel'
 
 export default {
   name: 'App',
@@ -77,6 +78,7 @@ export default {
     Chart,
     StatePanel,
     SetpointPanel,
+    SettingsPanel,
   },
   setup() {
     const myBSP = ref(100)
@@ -150,6 +152,8 @@ export default {
         this.temp = res.data.CurrentTemperature
         this.temperature.datasets[0].data.shift()
         this.temperature.datasets[0].data.push(this.temp)
+        this.temperature.datasets[1].data.shift()
+        this.temperature.datasets[1].data.push(this.mode === 'off' ? 0 : this.sp)
       })
       this.$refs.chart.chart.update(0)
     }
@@ -184,8 +188,21 @@ export default {
             })(),
             fill: true,
             pointRadius: 0,
+            //borderColor: 'rgba(109,117,125,1)',
+            backgroundColor: 'rgba(109,117,125,0.3)',
+          },
+          {
+            label: 'Setpoint',
+            data:(function() { 
+              let array = []
+              for (let i = 0; i < 180; i++) {
+                array.push(0)
+              }
+              return array 
+            })(),
+            fill: false,
+            pointRadius: 0,
             borderColor: 'rgba(109,117,125,1)',
-            backgroundColor: 'rgba(109,117,125,0.1)',
           }
         ]
       },

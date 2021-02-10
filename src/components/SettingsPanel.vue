@@ -1,45 +1,29 @@
 <template>
   <div class="p-fluid p-mr-4">
-    <h3>Brew Setpoint</h3>
+    <h3>Auto-Off</h3>
     <div class="p-field p-grid">
-      <div class="p-col-2">
-        <h3>{{brew}}°C</h3>
-      </div>
       <div class="p-col p-as-center">
-        <Slider 
-          id="brewSP" 
-          v-model="brew"
-          @slideend="setBrewSetpoint($event.value)"
-
-          @touchstart.prevent="handleTouchStart"
-          @mousedown.prevent="handleTouchStart"
-
-          @touchend.prevent="handleTouchEnd"
-          @mouseup.prevent="handleTouchEnd"
-          :min="90"
-          :max="110"
-        />
+        <InputSwitch v-model="enabled" @update:modelValue="setAutoOff" />
       </div>
     </div>
     <Divider />
-    <h3>Steam Setpoint</h3>
+    <h3>Auto-Off Duration</h3>
     <div class="p-field p-grid">
       <div class="p-col-2">
-        <h3>{{steam}}°C</h3>
+        <h3>{{duration}} min</h3>
       </div>
       <div class="p-col p-as-center">
-        <Slider
-          id="steamSP"
-          v-model="steam"
-          @slideend="setSteamSetpoint($event.value)"
-
+        <Slider id="autoOffDuration"
+          v-model="duration"
+          @slideend="setDuration($event.value)"
+          
           @touchstart.prevent="handleTouchStart"
           @mousedown.prevent="handleTouchStart"
 
           @touchend.prevent="handleTouchEnd"
           @mouseup.prevent="handleTouchEnd"
-          :min="100"
-          :max="160"
+          :min="10"
+          :max="180"
         />
       </div>
     </div>
@@ -55,55 +39,61 @@ import axios from 'axios'
 import { ref, onMounted, onUnmounted } from 'vue'
 
 import Slider from 'primevue/slider'
+import InputSwitch from 'primevue/inputswitch'
 import Divider from 'primevue/divider'
 
 export default {
   name: 'SetpointPanel',
   components: {
     Slider,
-    Divider
+    Divider,
+    InputSwitch
   },
   setup() {
-    const brew = ref(0)
-    const steam = ref(0)
+    const enabled = ref(true)
+    const duration = ref(0)
 
     let pauseUpdate = false
 
     let interval
 
-    async function getSetpoints() {
+    async function getValues() {
       try {
-        let resp = await axios.get('http://silvia:8081/setpoint/brew')
+        let resp = await axios.get('http://silvia:8081/autooff')
 
-        brew.value = resp.data.Value
+        enabled.value = resp.data.Value
       } catch (e) {
         console.error(e)
       }
 
       try {
-        let resp = await axios.get('http://silvia:8081/setpoint/steam')
+        let resp = await axios.get('http://silvia:8081/autooff/duration')
 
-        steam.value = resp.data.Value
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
-    async function setBrewSetpoint(val) {
-      try {
-        await axios.post('http://silvia:8081/setpoint/brew', { Value: val })
-
-        brew.value = val
+        duration.value = resp.data.Value
       } catch (e) {
         console.error(e)
       }
     }
 
-    async function setSteamSetpoint(val) {
+    async function setAutoOff(enable) {
       try {
-        await axios.post('http://silvia:8081/setpoint/steam', { Value: val })
+        if (enable) {
+          await axios.post('http://silvia:8081/autooff/enable')
+        } else {
+          await axios.post('http://silvia:8081/autooff/disable')
+        }
 
-        steam.value = val
+        enabled.value = enable
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    async function setDuration(val) {
+      try {
+        await axios.post('http://silvia:8081/autooff/duration', { Value: val })
+
+        duration.value = val
       } catch (e) {
         console.error(e)
       }
@@ -118,12 +108,12 @@ export default {
     }
 
     onMounted(() => {
-      getSetpoints()
+      getValues()
 
       // sync periodically
       interval = setInterval(() => {
         if (!pauseUpdate) {
-          getSetpoints()
+          getValues()
         }
       }, 1000)
     })
@@ -131,10 +121,10 @@ export default {
     onUnmounted(() => clearInterval(interval))
 
     return {
-      brew,
-      steam,
-      setBrewSetpoint,
-      setSteamSetpoint,
+      enabled,
+      duration,
+      setAutoOff,
+      setDuration,
       handleTouchStart,
       handleTouchEnd
     }

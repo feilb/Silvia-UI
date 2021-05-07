@@ -35,6 +35,12 @@
             <span class="info" v-if="mode !== 'off'">{{`${sp.toFixed(1)}°C`}}</span>
           </template>
         </TabPanel>
+        <TabPanel :disabled="true">
+          <template #header>
+            <i class="pi pi-clock icon-before" v-if="mode === 'brew'"></i>
+            <span class="info" v-if="mode === 'brew'">{{`${brewTime.toFixed(0)}s`}}</span>
+          </template>
+        </TabPanel>
       </TabView>
     </div>
   </div>
@@ -149,6 +155,7 @@ export default {
       axios.get("http://silvia:8081/status").then( res => {
         this.mode = res.data.Mode.toLowerCase()
         this.sp = res.data.CurrentSetpoint
+        this.brewTime = res.data.BrewTime
         this.temp = res.data.CurrentTemperature
         this.temperature.datasets[0].data.shift()
         this.temperature.datasets[0].data.push(this.temp)
@@ -165,6 +172,7 @@ export default {
     return {
       mode: "steam",
       sp: 0,
+      brewTime: 0,
       brew:100,
       steam:140,
       temp: 0,
